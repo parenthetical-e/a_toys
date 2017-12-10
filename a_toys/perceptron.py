@@ -40,8 +40,6 @@ def init_perceptron(input_size, output_size, scale, seed=None):
     return perceptron, params
 
 
-# TODO use `layer` to build input and output laters
-
 if __name__ == "__main__":
     # ----------------------------------------------------------------------
     # User init
