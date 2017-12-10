@@ -63,6 +63,7 @@ if __name__ == "__main__":
         return slice(idx * batch_size, (idx + 1) * batch_size)
 
     # ----------------------------------------------------------------------
+    # !
     perceptron, params = init_perceptron(img_size, n_digits, scale)
 
     def objective(params, i):
@@ -78,6 +79,7 @@ if __name__ == "__main__":
     objective_grad = grad(objective)
 
     # ----------------------------------------------------------------------
+    # Progress callback
     def accuracy(params, inputs, targets):
         target_class = np.argmax(targets, axis=1)
         predicted_class = np.argmax(perceptron(inputs, params), axis=1)
@@ -94,6 +96,7 @@ if __name__ == "__main__":
                                              test_acc))
 
     # ----------------------------------------------------------------------
+    # !
     opt_params = adam(
         objective_grad,
         params,
