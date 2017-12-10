@@ -9,7 +9,7 @@ from autograd.misc.optimizers import adam
 
 from a_toys.activation import sigmoid
 from a_toys.loss import l2
-from a_toys.data import load_mnist
+from a_toys.datasets import load_mnist
 
 
 def init_params(m, n, scale, seed=None):
@@ -25,12 +25,29 @@ def layer(x, W, b):
     return sigmoid(np.dot(x, W) + b)
 
 
+def init_perceptron(input_size, output_size, scale, seed=None):
+    params = [(init_params(input_size, input_size, scale)),
+              (init_params(input_size, output_size, scale))]
+
+    def perceptron(X, params):
+        z = X
+        for l, p in enumerate(params):
+            W, b = p
+            z = layer(z, W, b)
+
+        return z
+
+    return perceptron, params
+
+
 def iter_accuracy(params, x, y):
     target_class = np.argmax(y, axis=1)
     predicted_class = np.argmax(layer(x, *params), axis=1)
 
     return np.mean(np.isclose(predicted_class, target_class))
 
+
+# TODO use `layer` to build input and output laters
 
 if __name__ == "__main__":
 
@@ -47,7 +64,8 @@ if __name__ == "__main__":
 
     # Import data, and split into train/test lists
     N, Xs_train, y_train, Xs_test, y_test = load_mnist()
-
+    img_size = Xs_train.shape[1]
+    n_digits = 10
     # Batching
     num_batches = int(np.ceil(len(Xs_train) / batch_size))
 
@@ -56,6 +74,8 @@ if __name__ == "__main__":
         return slice(idx * batch_size, (idx + 1) * batch_size)
 
     # -
+    perceptron, params = init_perceptron(img_size, n_digits, scale)
+
     def objective(params, i):
 
         print(i)
@@ -64,14 +84,15 @@ if __name__ == "__main__":
         X = Xs_train[idx]
         y = y_train[idx]
 
-        y_pred = layer(X, *params)
+        y_pred = perceptron(X, params)
 
         return l2(y, y_pred)
 
     objective_grad = grad(objective)
 
     # -
-    res = adam(
-        objective_grad, (W0, b0),
+    opt_params = adam(
+        objective_grad,
+        params,
         step_size=step_size,
         num_iters=num_epochs * num_batches)
