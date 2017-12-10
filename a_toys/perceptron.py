@@ -40,32 +40,23 @@ def init_perceptron(input_size, output_size, scale, seed=None):
     return perceptron, params
 
 
-def iter_accuracy(params, x, y):
-    target_class = np.argmax(y, axis=1)
-    predicted_class = np.argmax(layer(x, *params), axis=1)
-
-    return np.mean(np.isclose(predicted_class, target_class))
-
-
 # TODO use `layer` to build input and output laters
 
 if __name__ == "__main__":
-
+    # ----------------------------------------------------------------------
     # User init
     scale = 0.1
     batch_size = 256
     num_epochs = 5
     step_size = 0.001
 
-    m, n = 10, 10
-
-    # Ran init
-    W0, b0 = init_params(m, n, scale)
-
+    # ----------------------------------------------------------------------
     # Import data, and split into train/test lists
     N, Xs_train, y_train, Xs_test, y_test = load_mnist()
     img_size = Xs_train.shape[1]
     n_digits = 10
+
+    # ----------------------------------------------------------------------
     # Batching
     num_batches = int(np.ceil(len(Xs_train) / batch_size))
 
@@ -73,12 +64,10 @@ if __name__ == "__main__":
         idx = i % num_batches
         return slice(idx * batch_size, (idx + 1) * batch_size)
 
-    # -
+    # ----------------------------------------------------------------------
     perceptron, params = init_perceptron(img_size, n_digits, scale)
 
     def objective(params, i):
-
-        print(i)
         idx = batch_index(i)
 
         X = Xs_train[idx]
@@ -90,9 +79,26 @@ if __name__ == "__main__":
 
     objective_grad = grad(objective)
 
-    # -
+    # ----------------------------------------------------------------------
+    def accuracy(params, inputs, targets):
+        target_class = np.argmax(targets, axis=1)
+        predicted_class = np.argmax(perceptron(inputs, params), axis=1)
+
+        return np.mean(predicted_class == target_class)
+
+    print("     Epoch     |    Train accuracy  |       Test accuracy  ")
+
+    def print_perf(params, iter, gradient):
+        if iter % num_batches == 0:
+            train_acc = accuracy(params, Xs_train, y_train)
+            test_acc = accuracy(params, Xs_test, y_test)
+            print("{:15}|{:20}|{:20}".format(iter // num_batches, train_acc,
+                                             test_acc))
+
+    # ----------------------------------------------------------------------
     opt_params = adam(
         objective_grad,
         params,
         step_size=step_size,
-        num_iters=num_epochs * num_batches)
+        num_iters=num_epochs * num_batches,
+        callback=print_perf)
