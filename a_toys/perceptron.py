@@ -1,7 +1,7 @@
 from sklearn import datasets
 
-import autograd.numpy.random as npr
 import autograd.numpy as np
+import autograd.numpy.random as npr
 
 from autograd import grad
 from autograd.misc.flatten import flatten
@@ -12,7 +12,7 @@ from a_toys.layers import sigmoid_layer
 from a_toys.datasets import load_mnist
 
 
-def init_params(m, n, scale, seed=None):
+def _init_params(m, n, scale, seed=None):
     prng = npr.RandomState(seed)
 
     W0 = prng.randn(m, n) * scale
@@ -22,8 +22,8 @@ def init_params(m, n, scale, seed=None):
 
 
 def init_perceptron(input_size, output_size, scale, seed=None):
-    params = [(init_params(input_size, input_size, scale)),
-              (init_params(input_size, output_size, scale))]
+    params = [(_init_params(input_size, input_size, scale)),
+              (_init_params(input_size, output_size, scale))]
 
     def perceptron(X, params):
         z = X
