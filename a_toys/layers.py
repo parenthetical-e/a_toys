@@ -1,6 +1,5 @@
-from a_toys.activation import sigmoid
 import autograd.numpy as np
 
 
-def sigmoid_layer(x, W, b):
-    return sigmoid(np.dot(x, W) + b)
+def linear_layer(x, W, b):
+    return np.dot(x, W) + b

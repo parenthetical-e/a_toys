@@ -8,7 +8,8 @@ from autograd.misc.flatten import flatten
 from autograd.misc.optimizers import adam
 
 from a_toys.loss import l2
-from a_toys.layers import sigmoid_layer
+from a_toys.layers import linear_layer
+from a_toys.activation import sigmoid
 from a_toys.datasets import load_mnist
 
 
@@ -21,19 +22,18 @@ def _init_params(m, n, scale, seed=None):
     return W0, b0
 
 
-def init_perceptron(input_size, output_size, scale, seed=None):
+def init_perceptron_params(input_size, output_size, scale, seed=None):
     params = [(_init_params(input_size, input_size, scale)),
               (_init_params(input_size, output_size, scale))]
 
-    def perceptron(X, params):
-        z = X
-        for l, p in enumerate(params):
-            W, b = p
-            z = sigmoid_layer(z, W, b)
+    return params
 
-        return z
 
-    return perceptron, params
+def perceptron(X, params):
+    z = sigmoid(linear_layer(X, *params[0]))  # In
+    z = sigmoid(linear_layer(z, *params[1]))  # Output
+
+    return z
 
 
 if __name__ == "__main__":
@@ -51,6 +51,9 @@ if __name__ == "__main__":
     n_digits = 10
 
     # ----------------------------------------------------------------------
+    params = init_perceptron_params(img_size, n_digits, scale)
+
+    # ----------------------------------------------------------------------
     # Batching
     num_batches = int(np.ceil(len(Xs_train) / batch_size))
 
@@ -59,8 +62,6 @@ if __name__ == "__main__":
         return slice(idx * batch_size, (idx + 1) * batch_size)
 
     # ----------------------------------------------------------------------
-    # !
-    perceptron, params = init_perceptron(img_size, n_digits, scale)
 
     def objective(params, i):
         idx = batch_index(i)
