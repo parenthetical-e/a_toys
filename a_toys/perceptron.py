@@ -7,8 +7,8 @@ from autograd import grad
 from autograd.misc.flatten import flatten
 from autograd.misc.optimizers import adam
 
-from a_toys.activation import sigmoid
 from a_toys.loss import l2
+from a_toys.layers import sigmoid_layer
 from a_toys.datasets import load_mnist
 
 
@@ -21,10 +21,6 @@ def init_params(m, n, scale, seed=None):
     return W0, b0
 
 
-def layer(x, W, b):
-    return sigmoid(np.dot(x, W) + b)
-
-
 def init_perceptron(input_size, output_size, scale, seed=None):
     params = [(init_params(input_size, input_size, scale)),
               (init_params(input_size, output_size, scale))]
@@ -33,7 +29,7 @@ def init_perceptron(input_size, output_size, scale, seed=None):
         z = X
         for l, p in enumerate(params):
             W, b = p
-            z = layer(z, W, b)
+            z = sigmoid_layer(z, W, b)
 
         return z
 
