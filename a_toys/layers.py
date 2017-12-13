@@ -35,13 +35,15 @@ def init_conv_layer(n_filters, kernel_size, scale, seed=None):
     return W_shared, b
 
 
-def max_pool_layer(X, shape):
+def max_pool_layer(X, pool_shape):
+    """A max-pooling layer."""
+
     new_shape = X.shape[:2]
 
     # Figure out how to ereshape X so 
     # we can do a 2d max efficiently
     for i in range(0, 2):
-        pool_width = shape[i]
+        pool_width = pool_shape[i]
         img_width = X.shape[i + 2]
         new_shape += (
             np.int(np.floor(np.array(img_width) / np.array(pool_width))),
