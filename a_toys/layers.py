@@ -62,6 +62,7 @@ def max_pool_layer(X, pool_shape):
 
 
 def init_max_pool_layer(max_width, max_height):
+    """Intialize parameters for a max_pool_layer"""
     return (np.float(max_width), np.float(max_height))
 
 
