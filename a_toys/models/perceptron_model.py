@@ -9,22 +9,14 @@ from autograd.misc.optimizers import adam
 
 from a_toys.loss import l2
 from a_toys.layers import linear_layer
+from a_toys.layers import init_linear_layer
 from a_toys.activation import sigmoid
 from a_toys.datasets import load_mnist
 
 
-def _init_params(m, n, scale, seed=None):
-    prng = npr.RandomState(seed)
-
-    W0 = prng.randn(m, n) * scale
-    b0 = prng.randn(n) * scale
-
-    return W0, b0
-
-
-def init_perceptron_params(input_size, output_size, scale, seed=None):
-    params = [(_init_params(input_size, input_size, scale)),
-              (_init_params(input_size, output_size, scale))]
+def init_perceptron(input_size, output_size, scale, seed=None):
+    params = [(init_linear_layer((input_size, input_size), scale)),
+              (init_linear_layer((input_size, output_size), scale))]
 
     return params
 
@@ -51,7 +43,7 @@ if __name__ == "__main__":
     n_digits = 10
 
     # ----------------------------------------------------------------------
-    params = init_perceptron_params(img_size, n_digits, scale)
+    params = init_perceptron(img_size, n_digits, scale)
 
     # ----------------------------------------------------------------------
     # Batching
