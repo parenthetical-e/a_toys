@@ -25,23 +25,24 @@ from a_toys.datasets import load_mnist
 def init_lenet5(scale,
                 kernel_size=5,
                 n_filter_l0=6,
+                X_pool_shape_l1=(2, 2),
                 n_filter_l2=16,
-                X_pool_shape=(2, 2),
-                X_shape_l4=(256, 120),
+                X_pool_shape_l3=(2, 2),
+                X_shape_l4=(864, 120),
                 X_shape_l5=(120, 83),
                 X_shape_l6=(83, 10),
                 seed=None):
     """Init parameters for lenet5"""
 
-    # Init with a count... just as placeholder
+    # Init with a countu... just as placeholder
     # (to ease readbility between init_lenet5(.) and lenet5(.))
     params = range(7)
 
     # Feature map/pooling
     params[0] = init_conv_layer(n_filter_l0, (kernel_size, kernel_size), scale)
-    params[1] = init_max_pool_layer(*X_pool_shape)
+    params[1] = init_max_pool_layer(*X_pool_shape_l1)
     params[2] = init_conv_layer(n_filter_l2, (kernel_size, kernel_size), scale)
-    params[3] = init_max_pool_layer(*X_pool_shape)
+    params[3] = init_max_pool_layer(*X_pool_shape_l3)
 
     # Dense layers
     params[4] = init_linear_layer(X_shape_l4, scale)
@@ -53,13 +54,25 @@ def init_lenet5(scale,
     return params
 
 
+def _dense_reshape(x):
+    shape = x.shape
+    n_data = shape[0]
+
+    n_rest = np.prod(np.asarray(shape[1:]))
+
+    new_shape = (n_data, n_rest)
+
+    return x.reshape(new_shape)
+
+
 def lenet5(X, params):
     # Feature map/pooling
     z = relu(conv_layer(X, *params[0]))
     z = max_pool_layer(z, params[1])
-    z = relu(conv_layer(z, *params[2]))
-    z = max_pool_layer(z, params[3])
-    z = z.reshape((-1, 16 * 4 * 4))  # flatten for dense
+    # z = relu(conv_layer(z, *params[2]))
+    # z = max_pool_layer(z, params[3])
+
+    z = _dense_reshape(z)
 
     # Dense layers
     z = relu(linear_layer(z, *params[4]))
@@ -103,14 +116,24 @@ if __name__ == "__main__":
         return np.array(x[:, None] == np.arange(K)[None, :], dtype=int)
 
     # ----------------------------------------------------------------------
-
     def objective(params, i):
+        # TODO - move to logprob; l2 makes no sense for classes: idiot
+        # Look up data
         idx = batch_index(i)
 
+        # Reshape
         X = Xs_train[idx].reshape((256, 1, 28, 28))
-        y = one_hot(y_train[idx], 10)
 
+        #!
         y_pred = lenet5(X, params)
+
+        # return y to int representation
+        y = y_train[idx]
+        y = np.argmax(y, axis=1)
+
+        y_pred = np.argmax(y_pred, axis=1)
+        import ipdb
+        ipdb.set_trace()
 
         return l2(y, y_pred)
 
@@ -118,9 +141,13 @@ if __name__ == "__main__":
 
     # ----------------------------------------------------------------------
     # Progress callback
-    def accuracy(params, inputs, targets):
-        target_class = np.argmax(targets, axis=1)
-        predicted_class = np.argmax(perceptron(inputs, params), axis=1)
+    def accuracy(params, X, y, n_pix=28, n_class=10):
+        X = X.reshape((X.shape[0], 1, n_pix, n_pix))
+        target_class = np.argmax(y, axis=1)
+
+        y = one_hot(y, n_class)
+        predicted_class = lenet5(X, params)
+        predicted_class = np.argmax(predicted_class, axis=1)
 
         return np.mean(predicted_class == target_class)
 
